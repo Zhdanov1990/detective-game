@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тёмная улица | Детективные истории</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="rain-canvas"></canvas>
+    <div class="blood-overlay"></div>
+    
+    <div class="main-menu" id="main-menu">
+        <div class="logo-container">
+            <div class="neon-logo">
+                <span class="neon-text">Тёмная</span>
+                <span class="neon-text">улица</span>
+            </div>
+            <p class="game-subtitle">Детективные истории в стиле нуар</p>
+        </div>
+        
+        <div class="investigations-container">
+            <h2 class="section-title">АКТИВНЫЕ РАССЛЕДОВАНИЯ</h2>
+            <div class="cases-grid" id="cases-list"></div>
+        </div>
+        
+        <div class="actions-container">
+            <button id="about-btn" class="neon-button">
+                <span class="neon-border"></span>
+                <span class="btn-text">ℹ️ ОБ ИГРЕ И АВТОРЕ</span>
+            </button>
+            <button id="donate-btn" class="neon-button">
+                <span class="neon-border"></span>
+                <span class="btn-text">⭐ ПОДДЕРЖАТЬ ПРОЕКТ</span>
+            </button>
+        </div>
+        
+        <div class="noir-footer">
+            <p>Дождь будет идть вечно... © 2023 Тёмная улица</p>
+        </div>
+    </div>
+    
+    <div class="game-container" id="game-container">
+        <div class="scene-header">
+            <h2 id="case-title"></h2>
+            <div class="clue-counter" id="clue-counter"></div>
+        </div>
+        
+        <div class="scene-content">
+            <div id="scene-text" class="scene-text"></div>
+            <div class="choices-container" id="choices"></div>
+        </div>
+    </div>
+    
+    <div class="ending-screen" id="ending-screen">
+        <div class="ending-content noir-panel">
+            <h2 id="ending-title"></h2>
+            <div id="ending-text" class="ending-text"></div>
+            <div id="ending-stats"></div>
+            <button class="neon-button" onclick="returnToMenu()">
+                <span class="neon-border"></span>
+                <span class="btn-text">🔄 НОВОЕ РАССЛЕДОВАНИЕ</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Модальное окно "Об игре" -->
+    <div id="about-modal" class="modal">
+        <div class="modal-content noir-panel">
+            <span class="close-btn">&times;</span>
+            <h2>ОБ ИГРЕ И АВТОРЕ</h2>
+            <div class="modal-body">
+                <p>Добро пожаловать в "Тёмную улицу" - атмосферные детективные истории, где каждый ваш выбор влияет на ход расследования и его исход.</p>
+                
+                <h3>Об авторе</h3>
+                <p>Меня зовут <strong>Сергей Жданов</strong>. Я начинающий разработчик с большой страстью к созданию игр. "Тёмная улица" - мой первый серьёзный проект, в котором я попытался объединить любовь к детективным историям и веб-разработке.</p>
+                <p>Я верю, что игры - это не просто развлечение, а искусство, способное вызывать эмоции и заставлять задуматься.</p>
+                
+                <h3>Истории в деталях</h3>
+                <p>Каждое дело в "Тёмной улице" - это тщательно продуманный сюжет с множеством развилок. Ваши решения определяют исход расследования - от полного раскрытия преступления до трагического провала.</p>
+                
+                <h3>Технологии</h3>
+                <p>Игра создана с использованием современных веб-технологий: HTML5, CSS3 и JavaScript. Все сюжеты написаны вручную без использования ИИ-генераторов.</p>
+                
+                <h3>Поддержка проекта</h3>
+                <p>Если вам нравится игра, вы можете поддержать её развитие. Каждое пожертвование помогает создавать новые расследования и улучшать игру.</p>
+                <p>Спасибо за ваше внимание к моей работе! Ваши отзывы и предложения помогают делать игру лучше.</p>
+                
+                <div class="contact-info">
+                    <p>По всем вопросам и предложениям:</p>
+                    <p>Email: detective@dark-street.ru</p>
+                    <p>Telegram: @dark_street_support</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/rain.js"></script>
+    <script src="scripts/payment.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>

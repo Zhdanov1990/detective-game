@@ -1,0 +1,524 @@
+/* Основные стили */
+body {
+    background-color: #0a0a0a;
+    color: #e0e0e0;
+    font-family: 'Cormorant Garamond', serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.7;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(70, 0, 0, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(70, 0, 0, 0.1) 0%, transparent 20%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Эффект крови */
+.blood-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-image: 
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.02"><path d="M20,30 Q40,5 60,30 T100,30 L100,100 L0,100 L0,30 Z" fill="%238b0000"/></svg>'),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" opacity="0.03"><path d="M30,50 Q50,10 70,50 T110,50 L110,150 L0,150 L0,50 Z" fill="%238b0000"/></svg>');
+    background-size: 200px, 300px;
+    background-repeat: repeat;
+    z-index: 1;
+}
+
+/* Главное меню */
+.main-menu {
+    max-width: 900px;
+    width: 90%;
+    margin: 20px auto;
+    padding: 20px;
+    position: relative;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo-container {
+    text-align: center;
+    margin: 10px 0 30px;
+    padding: 20px;
+    width: 100%;
+}
+
+.neon-logo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.neon-text {
+    font-family: 'Cinzel', serif;
+    font-size: 4rem;
+    font-weight: 700;
+    color: transparent;
+    text-shadow: 
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px #8b0000,
+        0 0 40px #8b0000,
+        0 0 80px #8b0000;
+    line-height: 1.1;
+    letter-spacing: 4px;
+    position: relative;
+    animation: neon-pulse 3s infinite alternate;
+}
+
+@keyframes neon-pulse {
+    0% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #8b0000, 0 0 40px #8b0000, 0 0 80px #8b0000; }
+    100% { text-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 15px #b30000, 0 0 30px #b30000, 0 0 60px #b30000; }
+}
+
+.game-subtitle {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: #a0a0a0;
+    margin-top: -5px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+/* Контейнер расследований */
+.investigations-container {
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-family: 'Cinzel', serif;
+    text-align: center;
+    color: #c0a080;
+    font-size: 1.8rem;
+    margin: 0 0 30px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #8b0000;
+}
+
+/* Список дел */
+.cases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.case-item {
+    background: rgba(20, 20, 20, 0.5);
+    border-radius: 4px;
+    padding: 20px;
+    transition: all 0.3s;
+    position: relative;
+    border: 1px solid #333;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+.case-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(139, 0, 0, 0.4);
+    border-color: #8b0000;
+}
+
+.case-item h3 {
+    color: #c0a080;
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.case-item p {
+    color: #b0b0b0;
+    min-height: 70px;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.case-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+/* Кнопки "Начать расследование" */
+.play-btn {
+    background: rgba(30, 10, 10, 0.7) !important;
+    border: 1px solid #8b0000 !important;
+    color: #e0e0e0 !important;
+    padding: 12px 20px !important;
+    border-radius: 4px !important;
+    font-family: 'Cinzel', serif !important;
+    font-size: 1rem !important;
+    cursor: pointer;
+    transition: all 0.3s !important;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);
+}
+
+.play-btn:hover {
+    background: rgba(139, 0, 0, 0.3) !important;
+    box-shadow: 0 0 15px rgba(139, 0, 0, 0.6) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Кнопки действий */
+.actions-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 30px;
+}
+
+/* Неоновые кнопки */
+.neon-button {
+    display: inline-block;
+    position: relative;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: 100%;
+    min-width: 280px;
+}
+
+.neon-border {
+    display: block;
+    width: 100%;
+    height: 50px;
+    background: rgba(20, 20, 20, 0.7);
+    border: 1px solid #8b0000;
+    box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);
+    position: relative;
+    transition: all 0.3s;
+}
+
+.neon-border::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border: 1px solid #8b0000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.btn-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    color: #e0e0e0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 2;
+}
+
+.neon-button:hover .neon-border {
+    background: rgba(139, 0, 0, 0.2);
+    box-shadow: 
+        0 0 15px rgba(139, 0, 0, 0.6),
+        0 0 30px rgba(139, 0, 0, 0.4);
+}
+
+.neon-button:hover .neon-border::before {
+    opacity: 1;
+}
+
+.neon-button:active .neon-border {
+    transform: scale(0.98);
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+}
+
+.modal-content {
+    background: rgba(15, 15, 15, 0.95);
+    border: 1px solid #8b0000;
+    box-shadow: 0 0 40px rgba(139, 0, 0, 0.7);
+    padding: 40px 30px 30px;
+    max-width: 700px;
+    width: 90%;
+    position: relative;
+    animation: modalAppear 0.5s ease-out;
+    margin: 30px auto;
+    border-radius: 4px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@keyframes modalAppear {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.close-btn {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    color: #aaa;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s;
+    z-index: 1001;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(10, 10, 10, 0.7);
+    border-radius: 50%;
+    border: 1px solid #8b0000;
+}
+
+.close-btn:hover {
+    color: #8b0000;
+    transform: scale(1.1);
+}
+
+.modal-body {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #d0d0d0;
+    padding: 10px;
+}
+
+.modal-body h3 {
+    color: #c0a080;
+    border-bottom: 1px solid #333;
+    padding-bottom: 8px;
+    margin-top: 25px;
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+}
+
+.contact-info {
+    background: rgba(30, 10, 10, 0.3);
+    padding: 15px;
+    border-left: 3px solid #8b0000;
+    margin-top: 20px;
+}
+
+/* Игровой интерфейс */
+.game-container {
+    display: none;
+    max-width: 800px;
+    margin: 20px auto;
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid #333;
+    box-shadow: 0 0 30px rgba(139, 0, 0, 0.5);
+    position: relative;
+    z-index: 30;
+    padding: 30px;
+    min-height: 70vh;
+    border-radius: 4px;
+}
+
+.scene-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #8b0000;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+#case-title {
+    color: #c0a080;
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.clue-counter {
+    background: rgba(30, 10, 10, 0.5);
+    padding: 8px 15px;
+    border-radius: 3px;
+    font-size: 1rem;
+    color: #a0a0a0;
+    font-family: 'Playfair Display', serif;
+}
+
+.scene-content {
+    min-height: 50vh;
+}
+
+.scene-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    color: #d0d0d0;
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards;
+    animation-delay: 0.2s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.choice-btn {
+    position: relative;
+    background: rgba(20, 20, 20, 0.7);
+    border: 1px solid #444;
+    color: #d0d0d0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    padding: 15px 20px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s;
+    overflow: hidden;
+    z-index: 1;
+    border-radius: 4px;
+}
+
+.choice-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(139, 0, 0, 0.2), transparent);
+    transition: 0.5s;
+    z-index: -1;
+}
+
+.choice-btn:hover {
+    border-color: #8b0000;
+    color: #fff;
+    transform: translateX(10px);
+}
+
+.choice-btn:hover::before {
+    left: 100%;
+}
+
+/* Экран концовки */
+.ending-screen {
+    display: none;
+    max-width: 700px;
+    margin: 20px auto;
+    padding: 30px;
+}
+
+.ending-content {
+    background: rgba(10, 10, 10, 0.95);
+    padding: 40px;
+    border: 1px solid #8b0000;
+    box-shadow: 0 0 40px rgba(139, 0, 0, 0.7);
+    border-radius: 4px;
+}
+
+#ending-title {
+    color: #c0a080;
+    font-family: 'Cinzel', serif;
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+    padding-bottom: 20px;
+    border-bottom: 1px solid #8b0000;
+}
+
+.ending-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    color: #d0d0d0;
+}
+
+#ending-stats {
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    color: #a0a0a0;
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+}
+
+/* Дождь */
+#rain-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    opacity: 0.3;
+}
+
+/* Футер */
+.noir-footer {
+    text-align: center;
+    color: #555;
+    font-size: 0.9rem;
+    margin-top: 20px;
+    padding: 20px;
+    font-family: 'Playfair Display', serif;
+}
+
+/* Заблокированные кейсы */
+.locked {
+    position: relative;
+    opacity: 0.8;
+}
+
+.locked::after {
+    content: "🔒";
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 1.5em;
+    color: #8b0000;
+    text-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
+}
