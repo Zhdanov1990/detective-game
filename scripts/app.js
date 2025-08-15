@@ -79,7 +79,7 @@ function showScene(sceneId) {
 function updateCluesUI() {
     const totalClues = currentCase.cluesToSolve;
     const foundClues = playerData.collectedClues.length;
-    document.getElementById('clue-counter').textContent = `🔍 Улик: ${foundClues}/${totalClues}`;
+    document.getElementById('clue-counter').textContent = `: ${foundClues}/${totalClues}`;
 }
 
 function showEnding(finalSceneId) {
