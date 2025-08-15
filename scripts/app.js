@@ -15,15 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         playerData.name = window.Telegram.WebApp.initDataUnsafe.user.first_name || playerData.name;
     }
     
-    const savedData = localStorage.getItem('detectiveSave');
-    if (savedData) {
-        try {
-            Object.assign(playerData, JSON.parse(savedData));
-        } catch (e) {
-            console.error('Error loading save:', e);
-        }
-    }
-    
     await loadCases();
     setupAboutModal();
     setupDonateButton();
@@ -93,7 +84,6 @@ async function startCase(caseId) {
         }
         
         playerData.currentCase = caseId;
-        saveGame();
         
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
@@ -116,7 +106,6 @@ function showScene(sceneId) {
     }
     
     currentScene = sceneId;
-    saveGame();
     
     document.getElementById('case-title').textContent = currentCase.title;
     document.getElementById('scene-text').innerHTML = scene.text.replace(/{name}/g, playerData.name);
@@ -202,7 +191,6 @@ function showEnding(sceneId) {
     
     playerData.currentCase = null;
     delete playerData.caseProgress[currentCase.id];
-    saveGame();
 }
 
 function updateCluesUI() {
@@ -218,7 +206,6 @@ function updateCluesUI() {
             clues: [...playerData.collectedClues],
             log: [...playerData.interrogationLog]
         };
-        saveGame();
     }
 }
 
@@ -227,15 +214,7 @@ function returnToMenu() {
     document.getElementById('ending-screen').style.display = 'none';
     document.getElementById('main-menu').style.display = 'block';
     
-    if (playerData.currentCase) {
-        saveGame();
-    }
-    
     loadCases();
-}
-
-function saveGame() {
-    localStorage.setItem('detectiveSave', JSON.stringify(playerData));
 }
 
 function setupAboutModal() {
@@ -274,13 +253,11 @@ function setupDonateButton() {
             window.Telegram.WebApp.openInvoice(invoice, (status) => {
                 if (status === 'paid') {
                     playerData.stars += 50;
-                    saveGame();
                     document.getElementById('stars-count').textContent = playerData.stars;
                 }
             });
         } else {
             playerData.stars += 50;
-            saveGame();
             document.getElementById('stars-count').textContent = playerData.stars;
         }
     });
@@ -313,7 +290,6 @@ async function unlockCase(caseId, price) {
 function completeUnlock(caseId, price) {
     playerData.stars -= price;
     playerData.unlockedCases.push(caseId);
-    saveGame();
     loadCases();
     alert(`Сюжет "${caseId}" разблокирован!`);
 }
