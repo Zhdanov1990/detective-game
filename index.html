@@ -12,6 +12,11 @@
     <canvas id="rain-canvas"></canvas>
     <div class="blood-overlay"></div>
     
+    <!-- Счетчик звезд -->
+    <div class="stars-counter">
+        ⭐ <span id="stars-count">50</span>
+    </div>
+    
     <div class="main-menu" id="main-menu">
         <div class="logo-container">
             <div class="neon-logo">
@@ -23,7 +28,9 @@
         
         <div class="investigations-container">
             <h2 class="section-title">АКТИВНЫЕ РАССЛЕДОВАНИЯ</h2>
-            <div class="cases-grid" id="cases-list"></div>
+            <div class="cases-grid" id="cases-list">
+                <!-- Cases will be loaded dynamically by app.js -->
+            </div>
         </div>
         
         <div class="actions-container">
@@ -45,12 +52,17 @@
     <div class="game-container" id="game-container">
         <div class="scene-header">
             <h2 id="case-title"></h2>
-            <div class="clue-counter" id="clue-counter"></div>
+            <div class="clue-counter" id="clue-counter">🔍 Улик: 0/0</div>
+            <button id="clues-btn" class="clues-button">
+                🔍 Улики (<span id="clues-count">0</span>)
+            </button>
         </div>
         
         <div class="scene-content">
             <div id="scene-text" class="scene-text"></div>
-            <div class="choices-container" id="choices"></div>
+            <div class="choices-container" id="choices">
+                <!-- Choices will be loaded dynamically -->
+            </div>
         </div>
     </div>
     
@@ -91,6 +103,17 @@
                     <p>Telegram: Sergey_Zhdanov1</p>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно "Улики" -->
+    <div id="clues-modal" class="modal">
+        <div class="modal-content noir-panel">
+            <span class="close-btn">&times;</span>
+            <h2>СОБРАННЫЕ УЛИКИ</h2>
+            <ul id="clues-list" class="clues-list">
+                <!-- Clues will be loaded dynamically -->
+            </ul>
         </div>
     </div>
 

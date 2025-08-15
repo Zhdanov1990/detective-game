@@ -362,6 +362,7 @@ body {
     border-bottom: 1px solid #8b0000;
     padding-bottom: 15px;
     margin-bottom: 25px;
+    position: relative;
 }
 
 #case-title {
@@ -484,7 +485,6 @@ body {
     font-size: 1.2rem;
     margin-bottom: 30px;
     color: #a0a0a0;
-    text-align: center;
     font-family: 'Playfair Display', serif;
 }
 
@@ -521,4 +521,149 @@ body {
     font-size: 1.5em;
     color: #8b0000;
     text-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
+}
+
+/* Новые стили для системы улик и прогресса */
+
+/* Кнопка улик */
+.clues-button {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: rgba(30, 10, 10, 0.7);
+    border: 1px solid #8b0000;
+    color: #e0e0e0;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.clues-button:hover {
+    background: rgba(139, 0, 0, 0.3);
+    box-shadow: 0 0 15px rgba(139, 0, 0, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Список улик */
+.clues-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px 0;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.clue-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #333;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    color: #d0d0d0;
+    background: rgba(20, 20, 20, 0.3);
+    margin-bottom: 8px;
+    border-left: 3px solid #8b0000;
+    transition: all 0.3s;
+}
+
+.clue-item:hover {
+    background: rgba(50, 10, 10, 0.5);
+    transform: translateX(5px);
+}
+
+.clue-number {
+    color: #c0a080;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Анимация для улик */
+@keyframes cluePulse {
+    0% { box-shadow: 0 0 5px rgba(139, 0, 0, 0.3); }
+    100% { box-shadow: 0 0 15px rgba(200, 0, 0, 0.7); }
+}
+
+.new-clue {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 5px rgba(139, 0, 0, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(200, 0, 0, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(139, 0, 0, 0.5); }
+}
+
+/* Счетчик звезд */
+.stars-counter {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: rgba(30, 10, 10, 0.7);
+    border: 1px solid #8b0000;
+    color: #e0e0e0;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    z-index: 100;
+    box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);
+}
+
+/* Прогресс-бар */
+.progress-bar {
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.progress-bar div {
+    height: 100%;
+    background: #8b0000;
+    transition: width 0.5s ease;
+}
+
+/* Заблокированные выборы */
+.disabled-choice {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.disabled-choice:hover {
+    transform: none !important;
+    border-color: #444 !important;
+}
+
+.disabled-choice::before {
+    display: none;
+}
+
+/* Нет улик */
+.no-clues {
+    text-align: center;
+    font-style: italic;
+    color: #777;
+    padding: 20px;
+}
+
+/* Прогресс в списке дел */
+.case-progress {
+    font-size: 0.9rem;
+    color: #a0a0a0;
+    margin-top: 5px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.progress-value {
+    color: #c0a080;
 }
