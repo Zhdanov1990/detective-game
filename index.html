@@ -3,78 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тёмная улица | Детективные истории</title>
+    <title>Тёмная улица | Мрачные детективные истории</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Атмосферные эффекты -->
     <canvas id="rain-canvas"></canvas>
     <div class="blood-overlay"></div>
+    <div id="flicker-effect"></div>
     
-    <!-- Счетчик звезд -->
-    <div class="stars-counter">
+    <!-- Счетчик звезд с анимацией -->
+    <div class="stars-counter pulse-animation">
         ⭐ <span id="stars-count">50</span>
     </div>
     
+    <!-- Главное меню -->
     <div class="main-menu" id="main-menu">
         <div class="logo-container">
             <div class="neon-logo">
-                <span class="neon-text">Тёмная</span>
-                <span class="neon-text">улица</span>
+                <span class="neon-text flicker-slow">Тёмная</span>
+                <span class="neon-text flicker-fast">улица</span>
             </div>
-            <p class="game-subtitle">Детективные истории в стиле нуар</p>
+            <p class="game-subtitle">Мрачные детективные истории с элементами ужаса</p>
         </div>
         
+        <!-- Список расследований -->
         <div class="investigations-container">
-            <h2 class="section-title">АКТИВНЫЕ РАССЛЕДОВАНИЯ</h2>
+            <h2 class="section-title">
+                <span class="title-border">АКТИВНЫЕ РАССЛЕДОВАНИЯ</span>
+            </h2>
             <div class="cases-grid" id="cases-list">
-                <!-- Cases will be loaded dynamically by app.js -->
+                <!-- Динамическая загрузка кейсов -->
             </div>
         </div>
         
+        <!-- Кнопки действий -->
         <div class="actions-container">
+            <button id="continue-btn" class="neon-button hidden">
+                <span class="neon-border"></span>
+                <span class="btn-text">➤ ПРОДОЛЖИТЬ ИГРУ</span>
+            </button>
             <button id="about-btn" class="neon-button">
                 <span class="neon-border"></span>
-                <span class="btn-text">ℹ️ ОБ ИГРЕ И АВТОРЕ</span>
+                <span class="btn-text">ℹ️ ОБ ИГРЕ</span>
             </button>
             <button id="donate-btn" class="neon-button">
                 <span class="neon-border"></span>
-                <span class="btn-text">⭐ ПОДДЕРЖАТЬ ПРОЕКТ</span>
+                <span class="btn-text">⭐ КУПИТЬ ЗВЁЗДЫ</span>
             </button>
         </div>
         
         <div class="noir-footer">
-            <p>Дождь будет идть вечно... © 2023 Сергей Жданов</p>
+            <p>Дождь будет идти вечно... © 2023-2024 Сергей Жданов</p>
         </div>
     </div>
     
+    <!-- Игровой интерфейс -->
     <div class="game-container" id="game-container">
         <div class="scene-header">
-            <h2 id="case-title"></h2>
-            <div class="clue-counter" id="clue-counter">🔍 Улик: 0/0</div>
+            <h2 id="case-title" class="text-glow"></h2>
+            <div class="clue-counter" id="clue-counter">
+                <span class="clue-icon">🔍</span> 
+                <span class="clue-text">Улик: </span>
+                <span id="clues-count">0</span>/<span id="total-clues">0</span>
+            </div>
             <button id="clues-btn" class="clues-button">
-                🔍 Улики (<span id="clues-count">0</span>)
+                📖 ДНЕВНИК
             </button>
         </div>
         
         <div class="scene-content">
-            <div id="scene-text" class="scene-text"></div>
+            <div id="scene-text" class="scene-text scrollable-content"></div>
             <div class="choices-container" id="choices">
-                <!-- Choices will be loaded dynamically -->
+                <!-- Варианты выбора загружаются динамически -->
             </div>
+        </div>
+        
+        <div class="game-footer">
+            <button id="save-btn" class="small-button">💾 СОХРАНИТЬ</button>
+            <button id="menu-btn" class="small-button">≡ МЕНЮ</button>
         </div>
     </div>
     
+    <!-- Экран концовки -->
     <div class="ending-screen" id="ending-screen">
         <div class="ending-content noir-panel">
-            <h2 id="ending-title"></h2>
-            <div id="ending-text" class="ending-text"></div>
-            <div id="ending-stats"></div>
-            <button class="neon-button" onclick="returnToMenu()">
-                <span class="neon-border"></span>
-                <span class="btn-text">🔄 НОВОЕ РАССЛЕДОВАНИЕ</span>
-            </button>
+            <h2 id="ending-title" class="ending-title-glow"></h2>
+            <div id="ending-text" class="ending-text scrollable-content"></div>
+            <div id="ending-stats" class="ending-stats"></div>
+            <div class="ending-buttons">
+                <button class="neon-button" onclick="returnToMenu()">
+                    <span class="neon-border"></span>
+                    <span class="btn-text">🔄 НОВОЕ РАССЛЕДОВАНИЕ</span>
+                </button>
+                <button id="share-btn" class="neon-button small">
+                    <span class="neon-border"></span>
+                    <span class="btn-text">📢 ПОДЕЛИТЬСЯ</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -82,43 +110,81 @@
     <div id="about-modal" class="modal">
         <div class="modal-content noir-panel">
             <span class="close-btn">&times;</span>
-            <h2>ОБ ИГРЕ И АВТОРЕ</h2>
-            <div class="modal-body">
-                <p>Добро пожаловать в "Тёмную улицу" - атмосферные детективные истории, где каждый ваш выбор влияет на ход расследования и его исход.</p>
+            <h2>ОБ ИГРЕ "ТЁМНАЯ УЛИЦА"</h2>
+            <div class="modal-body scrollable-content">
+                <div class="about-section">
+                    <h3>🌑 ПОГРУЗИТЕСЬ В АТМОСФЕРУ</h3>
+                    <p>Добро пожаловать в мир "Тёмной улицы" - уникальное сочетание детективных расследований и мрачных городских легенд. Каждое дело - это не просто поиск преступника, а погружение в пучину человеческих страхов и потусторонних тайн.</p>
+                </div>
                 
-                <h3>Об авторе</h3>
-                <p>Меня зовут <strong>Сергей Жданов</strong>. Я начинающий разработчик с большой страстью к созданию игр. "Тёмная улица" - мой проект, в котором я попытался объединить любовь к детективным историям и веб-разработке.</p>
-                <p>Я верю, что игры - это не просто развлечение, а искусство, способное вызывать эмоции и заставлять задуматься.</p>
+                <div class="about-section">
+                    <h3>🕵️‍♂️ ОСОБЕННОСТИ ИГРЫ</h3>
+                    <ul class="features-list">
+                        <li>🔍 Глубокие сюжеты с элементами нуара и хоррора</li>
+                        <li>💀 Неочевидные развязки и альтернативные концовки</li>
+                        <li>📖 Система дневника для анализа улик и записей</li>
+                        <li>🌧️ Атмосферные визуальные и звуковые эффекты</li>
+                        <li>⚡ Динамическая система прогресса и достижений</li>
+                    </ul>
+                </div>
                 
-                <h3>Истории в деталях</h3>
-                <p>Каждое дело в "Тёмной улице" - это тщательно продуманный сюжет с множеством развилок. Ваши решения определяют исход расследования - от полного раскрытия преступления до трагического провала.</p>
-                
-                <h3>Поддержка проекта</h3>
-                <p>Если вам нравится игра, вы можете поддержать её развитие. Каждое пожертвование помогает создавать новые расследования и улучшать игру.</p>
-                <p>Спасибо за ваше внимание к моей работе! Ваши отзывы и предложения помогают делать игру лучше.</p>
+                <div class="about-section">
+                    <h3>📜 ИСТОРИЯ СОЗДАНИЯ</h3>
+                    <p>Проект создан Сергеем Ждановым как сочетание любви к детективному жанру и мрачной эстетике городских легенд, и классические нуар-фильмы.</p>
+                </div>
                 
                 <div class="contact-info">
-                    <p>По всем вопросам и предложениям:</p>
-                    <p>Email: auto27parts@yandex.ru</p>
-                    <p>Telegram: Sergey_Zhdanov1</p>
+                    <h3>📩 СВЯЗЬ С АВТОРОМ</h3>
+                    <p>Для сотрудничества, предложений и поддержки:</p>
+                    <div class="contacts">
+                        <p><strong>Email:</strong> auto27parts@yandex.ru</p>
+                        <p><strong>Telegram:</strong> Sergey_Zhdanov1</p>
+                        <p><strong>Группа VK:</strong> vk.com/darkstreetgame</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Модальное окно "Улики" -->
+    <!-- Модальное окно "Дневник" -->
     <div id="clues-modal" class="modal">
         <div class="modal-content noir-panel">
             <span class="close-btn">&times;</span>
-            <h2>СОБРАННЫЕ УЛИКИ</h2>
-            <ul id="clues-list" class="clues-list">
-                <!-- Clues will be loaded dynamically -->
-            </ul>
+            <h2>🔎 ДНЕВНИК РАССЛЕДОВАНИЯ</h2>
+            <div class="diary-tabs">
+                <button class="tab-btn active" data-tab="clues">УЛИКИ</button>
+                <button class="tab-btn" data-tab="notes">ЗАМЕТКИ</button>
+                <button class="tab-btn" data-tab="persons">ПЕРСОНАЖИ</button>
+            </div>
+            <div class="diary-content">
+                <div id="clues-tab" class="tab-content active">
+                    <ul id="clues-list" class="clues-list scrollable-content"></ul>
+                </div>
+                <div id="notes-tab" class="tab-content">
+                    <textarea id="player-notes" placeholder="Ваши заметки..."></textarea>
+                </div>
+                <div id="persons-tab" class="tab-content">
+                    <ul id="persons-list" class="persons-list"></ul>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Аудио элементы -->
+    <audio id="main-theme" loop>
+        <source src="audio/main_theme.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="rain-sound" loop>
+        <source src="audio/rain.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="click-sound">
+        <source src="audio/click.wav" type="audio/wav">
+    </audio>
+
+    <!-- Скрипты -->
     <script src="scripts/rain.js"></script>
-    <script src="scripts/payment.js"></script>
+    <script src="scripts/audio.js"></script>
+    <script src="scripts/save-system.js"></script>
     <script src="scripts/app.js"></script>
 </body>
 </html>
