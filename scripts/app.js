@@ -5,23 +5,21 @@ let currentScene = null;
 
 // Данные игрока
 const playerData = {
-    name: 'Детектив',           // Имя игрока
-    stars: 50,                   // Количество "звёзд" — внутренняя валюта/очки
-    unlockedCases: ['hotel_murder'], // Список разблокированных дел
-    currentCase: null,           // Активное дело игрока
-    collectedClues: [],          // Собранные улики
-    interrogationLog: [],        // Лог допросов
-    caseProgress: {}             // Прогресс по каждому делу (сцены, найденные улики)
+    name: 'Детектив',                // Имя игрока
+    stars: 50,                        // Количество "звёзд" — внутренняя валюта/очки
+    unlockedCases: ['hotel_murder'],  // Список разблокированных дел
+    currentCase: null,                // Активное дело игрока
+    collectedClues: [],               // Собранные улики
+    interrogationLog: [],             // Лог допросов
+    caseProgress: {}                  // Прогресс по каждому делу (сцены, найденные улики)
 };
 
 // Инициализация после загрузки страницы
 document.addEventListener('DOMContentLoaded', async () => {
-    // Если Telegram WebApp передал данные пользователя, берём имя
     if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
         playerData.name = window.Telegram.WebApp.initDataUnsafe.user.first_name || playerData.name;
     }
-    
-    // Загружаем список дел, настраиваем модальные окна и кнопку доната
+
     await loadCases();
     setupAboutModal();
     setupDonateButton();
@@ -33,13 +31,12 @@ async function loadCases() {
         const response = await fetch('cases/cases-list.json');
         const cases = await response.json();
         const casesList = document.getElementById('cases-list');
-        casesList.innerHTML = ''; // Очистка контейнера перед добавлением дел
+        casesList.innerHTML = '';
 
-        // Проходим по каждому делу и создаём его карточку
         cases.forEach(caseItem => {
             const isUnlocked = playerData.unlockedCases.includes(caseItem.id);
             const progress = playerData.caseProgress[caseItem.id]?.progress || 0;
-            
+
             const caseElement = document.createElement('div');
             caseElement.className = `case-item ${isUnlocked ? '' : 'locked'}`;
             caseElement.innerHTML = `
@@ -61,11 +58,9 @@ async function loadCases() {
                     </div>
                 </div>
             `;
-            
             casesList.appendChild(caseElement);
         });
 
-        // Навешиваем обработчики на кнопки "Играть" и "Разблокировать"
         document.querySelectorAll('.play-btn').forEach(btn => {
             btn.addEventListener('click', () => startCase(btn.dataset.case));
         });
@@ -74,8 +69,9 @@ async function loadCases() {
             btn.addEventListener('click', () => unlockCase(btn.dataset.case, parseInt(btn.dataset.price)));
         });
 
-        // Обновляем отображение звёзд
-        document.getElementById('stars-count').textContent = playerData.stars;
+        const starsEl = document.getElementById('stars-count');
+        if (starsEl) starsEl.textContent = playerData.stars;
+
     } catch (error) {
         console.error('Error loading cases:', error);
     }
@@ -84,11 +80,9 @@ async function loadCases() {
 // Начало или продолжение дела
 async function startCase(caseId) {
     try {
-        // Загружаем JSON с делом
         const response = await fetch(`cases/free/${caseId}.json`);
         currentCase = await response.json();
-        
-        // Если игрок уже начал это дело, восстанавливаем собранные улики и лог допросов
+
         if (playerData.currentCase === caseId && playerData.caseProgress[caseId]) {
             playerData.collectedClues = playerData.caseProgress[caseId].clues || [];
             playerData.interrogationLog = playerData.caseProgress[caseId].log || [];
@@ -96,16 +90,16 @@ async function startCase(caseId) {
             playerData.collectedClues = [];
             playerData.interrogationLog = [];
         }
-        
+
         playerData.currentCase = caseId;
-        
-        // Показываем игровой интерфейс и скрываем меню
+
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('ending-screen').style.display = 'none';
-        
+
         const startScene = playerData.caseProgress[caseId]?.currentScene || currentCase.startScene;
         showScene(startScene);
+
     } catch (error) {
         console.error('Error loading case:', error);
         alert('Ошибка загрузки дела. Попробуйте позже.');
@@ -114,44 +108,41 @@ async function startCase(caseId) {
 
 // Отображение сцены
 function showScene(sceneId) {
+    if (!currentCase) return;
+
     const scene = currentCase.scenes[sceneId];
     if (!scene) {
         console.error(`Scene ${sceneId} not found!`);
         returnToMenu();
         return;
     }
-    
+
     currentScene = sceneId;
-    
-    // Отображаем текст сцены
+
     document.getElementById('case-title').textContent = currentCase.title;
     document.getElementById('scene-text').innerHTML = scene.text.replace(/{name}/g, playerData.name);
-    
+
     const choicesContainer = document.getElementById('choices');
     choicesContainer.innerHTML = '';
-    
-    // Отображаем кнопки выбора
+
     if (scene.choices && scene.choices.length > 0) {
         scene.choices.forEach(choice => {
             const button = document.createElement('button');
             button.className = 'choice-btn';
             button.textContent = choice.text;
-            
-            // Блокируем выбор, если нужна определённая улика
+
             if (choice.requiredClue && !playerData.collectedClues.includes(choice.requiredClue)) {
                 button.disabled = true;
                 button.classList.add('disabled-choice');
                 button.title = `Нужна улика: ${choice.requiredClue}`;
             }
-            
+
             button.addEventListener('click', () => {
-                // Добавляем улику, если она есть
                 if (choice.clue && !playerData.collectedClues.includes(choice.clue)) {
                     playerData.collectedClues.push(choice.clue);
                     updateCluesUI();
                 }
-                
-                // Переходим к следующей сцене или финалу
+
                 if (choice.next) {
                     const nextScene = currentCase.scenes[choice.next];
                     if (nextScene?.final) {
@@ -163,7 +154,7 @@ function showScene(sceneId) {
                     showEnding(sceneId);
                 }
             });
-            
+
             choicesContainer.appendChild(button);
         });
     } else if (scene.final) {
@@ -172,36 +163,56 @@ function showScene(sceneId) {
         console.error('No valid choices in scene:', sceneId);
         returnToMenu();
     }
-    
+
     updateCluesUI();
+}
+
+// Обновление счетчика уликов
+function updateCluesUI() {
+    if (!currentCase || !playerData.currentCase) return;
+
+    const cluesCount = playerData.collectedClues.length;
+    const totalClues = currentCase.cluesToSolve || 0;
+
+    const clueCounter = document.getElementById('clue-counter');
+    if (clueCounter) {
+        clueCounter.textContent = `🔍 Улик: ${cluesCount}/${totalClues}`;
+    }
+
+    playerData.caseProgress[playerData.currentCase] = {
+        progress: Math.min(100, Math.round((cluesCount / totalClues) * 100)),
+        currentScene,
+        clues: [...playerData.collectedClues],
+        log: [...playerData.interrogationLog]
+    };
 }
 
 // Отображение экрана завершения дела
 function showEnding(sceneId) {
+    if (!currentCase) return;
+
     const ending = currentCase.scenes[sceneId];
     if (!ending) {
         console.error('Ending scene not found:', sceneId);
         returnToMenu();
         return;
     }
-    
-    // Определяем тип финала
+
     let endingType = "bad";
     if (sceneId.includes('true') || sceneId.includes('good')) endingType = "good";
     else if (sceneId.includes('neutral')) endingType = "neutral";
-    
+
     const endings = {
         good: ["Дело раскрыто!", "Полная победа", 30],
         neutral: ["Компромисс", "Частичный успех", 15],
         bad: ["Провал", "Расследование провалено", 5]
     };
-    
+
     const [title, result, stars] = endings[endingType];
-    
+
     document.getElementById('ending-title').textContent = title;
     document.getElementById('ending-text').textContent = ending.text;
-    
-    // Добавляем звёзды за результат
+
     playerData.stars += stars;
     document.getElementById('ending-stats').innerHTML = `
         <p>🔍 Собрано улик: ${playerData.collectedClues.length}/${currentCase.cluesToSolve}</p>
@@ -209,42 +220,23 @@ function showEnding(sceneId) {
         <p>⭐ Получено звёзд: +${stars}</p>
         <p>⚖️ Итог: ${result}</p>
     `;
-    
-    // Показываем экран завершения и скрываем игру
+
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('ending-screen').style.display = 'block';
-    
+
     playerData.currentCase = null;
     delete playerData.caseProgress[currentCase.id];
 }
 
-// Обновление отображения количества собранных уликов
-function updateCluesUI() {
-    const cluesCount = playerData.collectedClues.length;
-    const totalClues = currentCase.cluesToSolve;
-    document.getElementById('clue-counter').textContent = `🔍 Улик: ${cluesCount}/${totalClues}`;
-    
-    if (currentCase && playerData.currentCase) {
-        const progress = Math.min(100, Math.round((cluesCount / totalClues) * 100));
-        playerData.caseProgress[playerData.currentCase] = {
-            progress,
-            currentScene,
-            clues: [...playerData.collectedClues],
-            log: [...playerData.interrogationLog]
-        };
-    }
-}
-
-// Возврат в главное меню
+// Возврат в меню
 function returnToMenu() {
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('ending-screen').style.display = 'none';
     document.getElementById('main-menu').style.display = 'block';
-    
     loadCases();
 }
 
-// Настройка модального окна "О проекте"
+// Модальное окно "О проекте"
 function setupAboutModal() {
     const modal = document.getElementById('about-modal');
     const btn = document.getElementById('about-btn');
@@ -270,7 +262,10 @@ function setupAboutModal() {
 
 // Настройка кнопки доната
 function setupDonateButton() {
-    document.getElementById('donate-btn').addEventListener('click', () => {
+    const donateBtn = document.getElementById('donate-btn');
+    if (!donateBtn) return;
+
+    donateBtn.addEventListener('click', () => {
         if (window.Telegram?.WebApp?.openInvoice) {
             const invoice = {
                 title: "Поддержать автора",
@@ -278,7 +273,6 @@ function setupDonateButton() {
                 currency: "USD",
                 prices: [{ label: "50 звезд", amount: "5000" }]
             };
-            
             window.Telegram.WebApp.openInvoice(invoice, (status) => {
                 if (status === 'paid') {
                     playerData.stars += 50;
@@ -298,7 +292,7 @@ async function unlockCase(caseId, price) {
         alert(`Недостаточно звёзд! Нужно: ${price}, у вас: ${playerData.stars}`);
         return;
     }
-    
+
     if (window.Telegram?.WebApp?.openInvoice) {
         const invoice = {
             title: `Разблокировка "${caseId}"`,
@@ -306,18 +300,14 @@ async function unlockCase(caseId, price) {
             currency: "USD",
             prices: [{ label: `${price} звезд`, amount: (price * 100).toString() }]
         };
-        
         window.Telegram.WebApp.openInvoice(invoice, (status) => {
-            if (status === 'paid') {
-                completeUnlock(caseId, price);
-            }
+            if (status === 'paid') completeUnlock(caseId, price);
         });
     } else {
         completeUnlock(caseId, price);
     }
 }
 
-// Завершение процесса разблокировки
 function completeUnlock(caseId, price) {
     playerData.stars -= price;
     playerData.unlockedCases.push(caseId);
