@@ -6,7 +6,48 @@
     <title>Тёмная улица | Детективные истории</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap">
-    <link rel="stylesheet" href="styles.css">
+    <script>
+    (function() {
+        function setVersionLabel() {
+            var el = document.getElementById('app-version');
+            if (el && window.APP_VERSION) {
+                el.textContent = 'v ' + window.APP_VERSION;
+            }
+        }
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'version.json?ts=' + Date.now(), false);
+            xhr.send(null);
+            var version = 'dev-' + Date.now();
+            if (xhr.status >= 200 && xhr.status < 300) {
+                var data = JSON.parse(xhr.responseText || '{}');
+                version = data.version || version;
+            }
+            window.APP_VERSION = version;
+        } catch (e) {
+            window.APP_VERSION = 'dev-' + Date.now();
+        }
+        function injectCss(href) {
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href + '?v=' + encodeURIComponent(window.APP_VERSION);
+            document.head.appendChild(link);
+        }
+        function injectJs(src) {
+            var s = document.createElement('script');
+            s.src = src + '?v=' + encodeURIComponent(window.APP_VERSION);
+            document.head.appendChild(s);
+        }
+        injectCss('styles.css');
+        injectJs('scripts/rain.js');
+        injectJs('scripts/app.js');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setVersionLabel);
+        } else {
+            setVersionLabel();
+        }
+    })();
+    </script>
 </head>
 <body>
     <canvas id="rain-canvas"></canvas>
@@ -46,6 +87,7 @@
         
         <div class="noir-footer">
             <p>Дождь будет идть вечно... © 2023 Сергей Жданов</p>
+            <p id="app-version" class="app-version"></p>
         </div>
     </div>
     
@@ -116,9 +158,5 @@
             </ul>
         </div>
     </div>
-
-    <script src="scripts/rain.js"></script>
-    <script src="scripts/payment.js"></script>
-    <script src="scripts/app.js"></script>
 </body>
 </html>

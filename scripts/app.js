@@ -9,6 +9,10 @@ const playerData = {
     interrogationLog: [],
     caseProgress: {}
 };
+function versionedUrl(url) {
+    const version = window.APP_VERSION || String(Date.now());
+    return url + (url.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(version);
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (window.Telegram.WebApp.initDataUnsafe.user) {
@@ -27,11 +31,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadCases();
     setupAboutModal();
     setupDonateButton();
+    const versionLabel = document.getElementById('app-version');
+    if (versionLabel && window.APP_VERSION) {
+        versionLabel.textContent = 'v ' + window.APP_VERSION;
+    }
 });
 
 async function loadCases() {
     try {
-        const response = await fetch('cases/cases-list.json');
+        const response = await fetch(versionedUrl('cases/cases-list.json'));
         const cases = await response.json();
         const casesList = document.getElementById('cases-list');
         casesList.innerHTML = '';
@@ -55,7 +63,7 @@ async function loadCases() {
                         <button class="unlock-btn" data-case="${caseItem.id}" data-price="${caseItem.price}">
                             🔓 Разблокировать (${caseItem.price} ⭐)
                         </button>` : ''}
-                        <button class="play-btn" data-case="${caseItem.id}">
+                        <button class="play-btn" data-case="${caseItem.id}" data-type="${caseItem.type}">
                             ${progress > 0 ? '↪️ Продолжить' : '🔍 Начать'}
                         </button>
                     </div>
@@ -66,7 +74,7 @@ async function loadCases() {
         });
 
         document.querySelectorAll('.play-btn').forEach(btn => {
-            btn.addEventListener('click', () => startCase(btn.dataset.case));
+            btn.addEventListener('click', () => startCase(btn.dataset.case, btn.dataset.type));
         });
 
         document.querySelectorAll('.unlock-btn').forEach(btn => {
@@ -79,10 +87,30 @@ async function loadCases() {
     }
 }
 
-async function startCase(caseId) {
+async function startCase(caseId, caseType) {
     try {
-        const response = await fetch(`cases/${caseId}.json`);
-        currentCase = await response.json();
+        let currentJson = null;
+        const candidatePaths = [];
+        if (caseType === 'free') candidatePaths.push(`cases/free/${caseId}.json`);
+        if (caseType === 'premium') candidatePaths.push(`cases/premium/${caseId}.json`);
+        candidatePaths.push(`cases/${caseId}.json`, `cases/free/${caseId}.json`, `cases/premium/${caseId}.json`);
+        
+        for (const path of candidatePaths) {
+            try {
+                const response = await fetch(versionedUrl(path));
+                if (response.ok) {
+                    currentJson = await response.json();
+                    break;
+                }
+            } catch (e) {
+                // try next
+            }
+        }
+        
+        if (!currentJson) {
+            throw new Error(`Не найден файл сюжета для ${caseId}`);
+        }
+        currentCase = currentJson;
         
         // Восстановление прогресса
         if (playerData.currentCase === caseId && playerData.caseProgress[caseId]) {
