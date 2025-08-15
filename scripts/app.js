@@ -11,7 +11,7 @@ const playerData = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    if (window.Telegram.WebApp.initDataUnsafe.user) {
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
         playerData.name = window.Telegram.WebApp.initDataUnsafe.user.first_name || playerData.name;
     }
     
@@ -81,10 +81,9 @@ async function loadCases() {
 
 async function startCase(caseId) {
     try {
-        const response = await fetch(`cases/${caseId}.json`);
+        const response = await fetch(`cases/free/${caseId}.json`);
         currentCase = await response.json();
         
-        // Восстановление прогресса
         if (playerData.currentCase === caseId && playerData.caseProgress[caseId]) {
             playerData.collectedClues = playerData.caseProgress[caseId].clues || [];
             playerData.interrogationLog = playerData.caseProgress[caseId].log || [];
@@ -134,6 +133,7 @@ function showScene(sceneId) {
             if (choice.requiredClue && !playerData.collectedClues.includes(choice.requiredClue)) {
                 button.disabled = true;
                 button.classList.add('disabled-choice');
+                button.title = `Нужна улика: ${choice.requiredClue}`;
             }
             
             button.addEventListener('click', () => {
@@ -143,7 +143,12 @@ function showScene(sceneId) {
                 }
                 
                 if (choice.next) {
-                    showScene(choice.next);
+                    const nextScene = currentCase.scenes[choice.next];
+                    if (nextScene?.final) {
+                        showEnding(choice.next);
+                    } else {
+                        showScene(choice.next);
+                    }
                 } else if (scene.final) {
                     showEnding(sceneId);
                 }
@@ -170,8 +175,7 @@ function showEnding(sceneId) {
     }
     
     let endingType = "bad";
-    if (sceneId.includes('true')) endingType = "good";
-    else if (sceneId.includes('good')) endingType = "good";
+    if (sceneId.includes('true') || sceneId.includes('good')) endingType = "good";
     else if (sceneId.includes('neutral')) endingType = "neutral";
     
     const endings = {
@@ -196,7 +200,6 @@ function showEnding(sceneId) {
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('ending-screen').style.display = 'block';
     
-    // Очищаем текущее дело
     playerData.currentCase = null;
     delete playerData.caseProgress[currentCase.id];
     saveGame();
@@ -260,7 +263,7 @@ function setupAboutModal() {
 
 function setupDonateButton() {
     document.getElementById('donate-btn').addEventListener('click', () => {
-        if (window.Telegram.WebApp.openInvoice) {
+        if (window.Telegram?.WebApp?.openInvoice) {
             const invoice = {
                 title: "Поддержать автора",
                 description: "Ваша поддержка поможет создавать новые истории",
@@ -276,7 +279,7 @@ function setupDonateButton() {
                 }
             });
         } else {
-            playerData.stars += 50; // Для тестирования без Telegram
+            playerData.stars += 50;
             saveGame();
             document.getElementById('stars-count').textContent = playerData.stars;
         }
@@ -289,7 +292,7 @@ async function unlockCase(caseId, price) {
         return;
     }
     
-    if (window.Telegram.WebApp.openInvoice) {
+    if (window.Telegram?.WebApp?.openInvoice) {
         const invoice = {
             title: `Разблокировка "${caseId}"`,
             description: `Доступ к сюжету за ${price} звезд`,
@@ -303,7 +306,7 @@ async function unlockCase(caseId, price) {
             }
         });
     } else {
-        completeUnlock(caseId, price); // Для тестирования без Telegram
+        completeUnlock(caseId, price);
     }
 }
 
