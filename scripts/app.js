@@ -4,55 +4,51 @@ const playerData = {
     name: 'Детектив',
     currentCase: null,
     collectedClues: [],
-    interrogationLog: []
+    interrogationLog: {} // {suspectId: [false, false]}
 };
 
-// Загружаем список кейсов и создаем карточки
 document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const response = await fetch('cases-list.json');
-        const cases = await response.json();
-        const casesList = document.getElementById('cases-list');
-        casesList.innerHTML = '';
-
-        cases.forEach(caseItem => {
-            const card = document.createElement('div');
-            card.className = 'case-item';
-            card.innerHTML = `
-                <h3>${caseItem.title}</h3>
-                <p>${caseItem.description}</p>
-                <button class="start-btn" data-case="${caseItem.id}">🔍 Начать</button>
-            `;
-            casesList.appendChild(card);
-        });
-
-        document.querySelectorAll('.start-btn').forEach(btn => {
-            btn.addEventListener('click', () => startCase(btn.dataset.case));
-        });
-    } catch (e) {
-        console.error('Ошибка загрузки кейсов:', e);
-    }
+    await loadCases();
 });
 
-async function startCase(caseId) {
+async function loadCases() {
     try {
-        const response = await fetch(`cases/free/${caseId}.json`);
+        const response = await fetch('cases/free/hotel_murder.json');
         currentCase = await response.json();
 
-        playerData.collectedClues = [];
-        playerData.interrogationLog = [];
-        playerData.currentCase = caseId;
+        // Инициализация логов для подозреваемых
+        currentCase.suspects.forEach(s => {
+            if (!playerData.interrogationLog[s.id]) {
+                playerData.interrogationLog[s.id] = Array(s.dialogs.length).fill(false);
+            }
+        });
 
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('game-container').style.display = 'block';
+        document.getElementById('main-menu').style.display = 'block';
+        document.getElementById('game-container').style.display = 'none';
         document.getElementById('ending-screen').style.display = 'none';
 
-        const startScene = currentCase.startScene;
-        showScene(startScene);
-    } catch (e) {
-        console.error('Ошибка загрузки квеста:', e);
-        alert('Не удалось загрузить квест. Попробуйте позже.');
+        renderCasesList();
+    } catch (error) {
+        console.error('Ошибка загрузки дела:', error);
     }
+}
+
+function renderCasesList() {
+    const casesList = document.getElementById('cases-list');
+    casesList.innerHTML = `
+        <div class="case-item" onclick="startCase()">
+            <h3>${currentCase.title}</h3>
+            <p>${currentCase.description}</p>
+        </div>
+    `;
+}
+
+function startCase() {
+    playerData.collectedClues = [];
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    document.getElementById('ending-screen').style.display = 'none';
+    showScene(currentCase.startScene);
 }
 
 function showScene(sceneId) {
@@ -60,63 +56,96 @@ function showScene(sceneId) {
     if (!scene) return;
 
     currentScene = sceneId;
+
     document.getElementById('case-title').textContent = currentCase.title;
     document.getElementById('scene-text').innerHTML = scene.text.replace(/{name}/g, playerData.name);
 
     const choicesContainer = document.getElementById('choices');
     choicesContainer.innerHTML = '';
 
-    if (scene.choices && scene.choices.length > 0) {
-        scene.choices.forEach(choice => {
-            const btn = document.createElement('button');
-            btn.className = 'choice-btn';
-            btn.textContent = choice.text;
-
-            btn.addEventListener('click', () => {
-                if (choice.clue && !playerData.collectedClues.includes(choice.clue)) {
-                    playerData.collectedClues.push(choice.clue);
-                }
-                if (choice.next) {
-                    showScene(choice.next);
-                } else if (scene.final) {
-                    showEnding(sceneId);
-                }
-            });
-
-            choicesContainer.appendChild(btn);
+    // Добавляем диалоги с подозреваемыми
+    if (scene.suspects && scene.suspects.length > 0) {
+        scene.suspects.forEach(suspectId => {
+            const suspect = currentCase.suspects.find(s => s.id === suspectId);
+            const doneAll = playerData.interrogationLog[suspectId].every(d => d);
+            if (!doneAll) {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.textContent = `Допросить ${suspect.name}`;
+                btn.addEventListener('click', () => showInterrogation(suspectId));
+                choicesContainer.appendChild(btn);
+            }
         });
-    } else if (scene.final) {
-        showEnding(sceneId);
+    }
+
+    // Продолжить по сюжету
+    if (scene.next) {
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'choice-btn';
+        nextBtn.textContent = '↪️ Продолжить';
+        nextBtn.addEventListener('click', () => showScene(scene.next));
+        choicesContainer.appendChild(nextBtn);
     }
 
     updateCluesUI();
 }
 
+function showInterrogation(suspectId) {
+    const suspect = currentCase.suspects.find(s => s.id === suspectId);
+    const done = playerData.interrogationLog[suspectId];
+
+    const availableIndex = done.findIndex(d => !d);
+    if (availableIndex === -1) return;
+
+    showDialog(suspectId, availableIndex);
+}
+
+function showDialog(suspectId, index) {
+    const suspect = currentCase.suspects.find(s => s.id === suspectId);
+    const dialog = suspect.dialogs[index];
+
+    document.getElementById('scene-text').innerHTML = dialog.text.replace(/{name}/g, playerData.name);
+
+    const choicesContainer = document.getElementById('choices');
+    choicesContainer.innerHTML = '';
+
+    // Сбор улик
+    if (dialog.clue && !playerData.collectedClues.includes(dialog.clue)) {
+        playerData.collectedClues.push(dialog.clue);
+    }
+
+    // Следующий диалог
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'choice-btn';
+    nextBtn.textContent = '➡️ Следующий диалог';
+    nextBtn.addEventListener('click', () => {
+        playerData.interrogationLog[suspectId][index] = true;
+        showInterrogation(suspectId);
+    });
+    choicesContainer.appendChild(nextBtn);
+
+    // Назад к сцене
+    const backBtn = document.createElement('button');
+    backBtn.className = 'choice-btn';
+    backBtn.textContent = '↩️ Вернуться к сцене';
+    backBtn.addEventListener('click', () => showScene(currentScene));
+    choicesContainer.appendChild(backBtn);
+
+    updateCluesUI();
+}
+
 function updateCluesUI() {
-    const totalClues = currentCase.cluesToSolve || 0;
+    const totalClues = currentCase.cluesToSolve;
     const foundClues = playerData.collectedClues.length;
     document.getElementById('clue-counter').textContent = `🔍 Улик: ${foundClues}/${totalClues}`;
 }
 
-function showEnding(finalSceneId) {
-    const ending = currentCase.scenes[finalSceneId];
+function showEnding(sceneId) {
+    const ending = currentCase.scenes[sceneId];
     if (!ending) return;
 
-    let endingType = "bad";
-    if (ending.result === 'good') endingType = 'good';
-    else if (ending.result === 'neutral') endingType = 'neutral';
-
-    const endings = {
-        good: ["Дело раскрыто!", "Вы нашли настоящего преступника!"],
-        neutral: ["Частичный успех", "Вы ошиблись с подозреваемым, но преступление почти раскрыто"],
-        bad: ["Провал", "Вы посадили невиновного, а преступник на свободе"]
-    };
-
-    const [title, text] = endings[endingType];
-
-    document.getElementById('ending-title').textContent = title;
-    document.getElementById('ending-text').textContent = text;
-
+    document.getElementById('ending-title').textContent = ending.title || 'Расследование завершено';
+    document.getElementById('ending-text').textContent = ending.text || '';
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('ending-screen').style.display = 'block';
 }
