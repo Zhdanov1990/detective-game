@@ -8,37 +8,60 @@ const playerData = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadCases();
+    await loadCasesList();
 });
 
-async function loadCases() {
+async function loadCasesList() {
     try {
-        const response = await fetch('cases/free/hotel_murder.json');
-        currentCase = await response.json();
-        document.getElementById('main-menu').style.display = 'block';
-        document.getElementById('game-container').style.display = 'none';
-        document.getElementById('ending-screen').style.display = 'none';
-    } catch (error) {
-        console.error('Error loading case:', error);
+        const response = await fetch('cases/cases-list.json');
+        const cases = await response.json();
+        const casesList = document.getElementById('cases-list');
+        casesList.innerHTML = '';
+
+        cases.forEach(c => {
+            const caseItem = document.createElement('div');
+            caseItem.className = 'case-item';
+            caseItem.innerHTML = `
+                <h3>${c.title}</h3>
+                <p>${c.description}</p>
+                <button class="start-case-btn" data-case="${c.id}">🔍 Начать</button>
+            `;
+            casesList.appendChild(caseItem);
+        });
+
+        document.querySelectorAll('.start-case-btn').forEach(btn => {
+            btn.addEventListener('click', () => startCase(btn.dataset.case));
+        });
+
+    } catch (e) {
+        console.error('Ошибка загрузки списка дел:', e);
     }
 }
 
-function startCase() {
-    playerData.collectedClues = [];
-    playerData.interrogationLog = [];
-    playerData.currentCase = currentCase.id;
-    document.getElementById('main-menu').style.display = 'none';
-    document.getElementById('game-container').style.display = 'block';
-    document.getElementById('ending-screen').style.display = 'none';
-    showScene(currentCase.startScene);
+async function startCase(caseId) {
+    try {
+        const response = await fetch(`cases/free/${caseId}.json`);
+        currentCase = await response.json();
+
+        playerData.collectedClues = [];
+        playerData.interrogationLog = [];
+        playerData.currentCase = currentCase.id;
+
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        document.getElementById('ending-screen').style.display = 'none';
+
+        showScene(currentCase.startScene);
+
+    } catch (e) {
+        console.error('Ошибка загрузки дела:', e);
+        alert('Не удалось загрузить дело. Попробуйте позже.');
+    }
 }
 
 function showScene(sceneId) {
     const scene = currentCase.scenes[sceneId];
-    if (!scene) {
-        console.error(`Scene ${sceneId} not found!`);
-        return;
-    }
+    if (!scene) return console.error('Сцена не найдена:', sceneId);
 
     currentScene = sceneId;
 
@@ -50,14 +73,15 @@ function showScene(sceneId) {
 
     if (scene.choices && scene.choices.length > 0) {
         scene.choices.forEach(choice => {
-            const button = document.createElement('button');
-            button.className = 'choice-btn';
-            button.textContent = choice.text;
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.textContent = choice.text;
 
-            button.addEventListener('click', () => {
+            btn.addEventListener('click', () => {
                 if (choice.clue && !playerData.collectedClues.includes(choice.clue)) {
                     playerData.collectedClues.push(choice.clue);
                 }
+
                 if (choice.next) {
                     showScene(choice.next);
                 } else if (scene.final) {
@@ -65,7 +89,7 @@ function showScene(sceneId) {
                 }
             });
 
-            choicesContainer.appendChild(button);
+            choicesContainer.appendChild(btn);
         });
     } else if (scene.final) {
         showEnding(sceneId);
@@ -75,7 +99,7 @@ function showScene(sceneId) {
 }
 
 function updateCluesUI() {
-    const totalClues = currentCase.cluesToSolve;
+    const totalClues = currentCase.cluesToSolve || 0;
     const foundClues = playerData.collectedClues.length;
     document.getElementById('clue-counter').textContent = `🔍 Улик: ${foundClues}/${totalClues}`;
 }
@@ -84,20 +108,21 @@ function showEnding(finalSceneId) {
     const ending = currentCase.scenes[finalSceneId];
     if (!ending) return;
 
-    let endingType = "bad";
+    let endingType = 'bad';
     if (ending.result === 'good') endingType = 'good';
     else if (ending.result === 'neutral') endingType = 'neutral';
 
     const endings = {
-        good: ["Дело раскрыто!", "Вы нашли настоящего преступника!", ""],
-        neutral: ["Частичный успех", "Вы ошиблись с подозреваемым, но преступление почти раскрыто", ""],
-        bad: ["Провал", "Вы посадили невиновного, а преступник на свободе", ""]
+        good: ["Дело раскрыто!", "Вы нашли настоящего преступника!"],
+        neutral: ["Частичный успех", "Вы ошиблись с подозреваемым, но преступление почти раскрыто"],
+        bad: ["Провал", "Вы посадили невиновного, а преступник на свободе"]
     };
 
-    const [title, text, stars] = endings[endingType];
+    const [title, text] = endings[endingType];
 
     document.getElementById('ending-title').textContent = title;
     document.getElementById('ending-text').textContent = text;
+
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('ending-screen').style.display = 'block';
 }
