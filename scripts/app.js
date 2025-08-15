@@ -130,76 +130,48 @@ function showScene(sceneId) {
             button.className = 'choice-btn';
             button.textContent = choice.text;
             
-            if (choice.requiredClue && !playerData.collectedClues.includes(choice.requiredClue)) {
-                button.disabled = true;
-                button.classList.add('disabled-choice');
-                button.title = `Нужна улика: ${choice.requiredClue}`;
-            }
-            
             button.addEventListener('click', () => {
                 if (choice.clue && !playerData.collectedClues.includes(choice.clue)) {
                     playerData.collectedClues.push(choice.clue);
                     updateCluesUI();
                 }
                 
-                if (choice.next) {
-                    const nextScene = currentCase.scenes[choice.next];
-                    if (nextScene?.final) {
-                        showEnding(choice.next);
-                    } else {
-                        showScene(choice.next);
-                    }
-                } else if (scene.final) {
-                    showEnding(sceneId);
+                if (choice.ending) {
+                    showEnding(choice.ending, sceneId);
+                } else if (choice.next) {
+                    showScene(choice.next);
                 }
             });
             
             choicesContainer.appendChild(button);
         });
-    } else if (scene.final) {
-        showEnding(sceneId);
-    } else {
-        console.error('No valid choices in scene:', sceneId);
-        returnToMenu();
     }
-    
+
     updateCluesUI();
 }
 
-function showEnding(sceneId) {
-    const ending = currentCase.scenes[sceneId];
-    if (!ending) {
-        console.error('Ending scene not found:', sceneId);
-        returnToMenu();
-        return;
-    }
-    
-    let endingType = "bad";
-    if (sceneId.includes('true') || sceneId.includes('good')) endingType = "good";
-    else if (sceneId.includes('neutral')) endingType = "neutral";
-    
-    const endings = {
-        good: ["Дело раскрыто!", "Полная победа", 30],
-        neutral: ["Компромисс", "Частичный успех", 15],
-        bad: ["Провал", "Расследование провалено", 5]
+function showEnding(endingType, sceneId) {
+    const endingScenes = {
+        good: ["Отличное расследование!", "Вы правильно вычислили преступника.", 30],
+        neutral: ["Частичный успех", "Вы выбрали не совсем верного подозреваемого.", 15],
+        bad: ["Провал", "Вы ошиблись, преступник остался на свободе.", 5]
     };
-    
-    const [title, result, stars] = endings[endingType];
-    
-    document.getElementById('ending-title').textContent = title;
-    document.getElementById('ending-text').textContent = ending.text;
-    
-    playerData.stars += stars;
+
+    const ending = endingScenes[endingType];
+
+    document.getElementById('ending-title').textContent = ending[0];
+    document.getElementById('ending-text').textContent = currentCase.scenes[sceneId]?.text || '';
     document.getElementById('ending-stats').innerHTML = `
         <p>🔍 Собрано улик: ${playerData.collectedClues.length}/${currentCase.cluesToSolve}</p>
         <p>👥 Допросов: ${playerData.interrogationLog.length}</p>
-        <p>⭐ Получено звёзд: +${stars}</p>
-        <p>⚖️ Итог: ${result}</p>
+        <p>⭐ Получено звёзд: +${ending[2]}</p>
+        <p>⚖️ Итог: ${ending[1]}</p>
     `;
-    
+
+    playerData.stars += ending[2];
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('ending-screen').style.display = 'block';
-    
+
     playerData.currentCase = null;
     delete playerData.caseProgress[currentCase.id];
     saveGame();
@@ -263,26 +235,9 @@ function setupAboutModal() {
 
 function setupDonateButton() {
     document.getElementById('donate-btn').addEventListener('click', () => {
-        if (window.Telegram?.WebApp?.openInvoice) {
-            const invoice = {
-                title: "Поддержать автора",
-                description: "Ваша поддержка поможет создавать новые истории",
-                currency: "USD",
-                prices: [{ label: "50 звезд", amount: "5000" }]
-            };
-            
-            window.Telegram.WebApp.openInvoice(invoice, (status) => {
-                if (status === 'paid') {
-                    playerData.stars += 50;
-                    saveGame();
-                    document.getElementById('stars-count').textContent = playerData.stars;
-                }
-            });
-        } else {
-            playerData.stars += 50;
-            saveGame();
-            document.getElementById('stars-count').textContent = playerData.stars;
-        }
+        playerData.stars += 50;
+        saveGame();
+        document.getElementById('stars-count').textContent = playerData.stars;
     });
 }
 
@@ -292,25 +247,6 @@ async function unlockCase(caseId, price) {
         return;
     }
     
-    if (window.Telegram?.WebApp?.openInvoice) {
-        const invoice = {
-            title: `Разблокировка "${caseId}"`,
-            description: `Доступ к сюжету за ${price} звезд`,
-            currency: "USD",
-            prices: [{ label: `${price} звезд`, amount: (price * 100).toString() }]
-        };
-        
-        window.Telegram.WebApp.openInvoice(invoice, (status) => {
-            if (status === 'paid') {
-                completeUnlock(caseId, price);
-            }
-        });
-    } else {
-        completeUnlock(caseId, price);
-    }
-}
-
-function completeUnlock(caseId, price) {
     playerData.stars -= price;
     playerData.unlockedCases.push(caseId);
     saveGame();
