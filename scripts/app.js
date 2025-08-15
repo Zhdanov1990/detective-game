@@ -1,32 +1,41 @@
+// Текущая активная история (дело)
 let currentCase = null;
+// Текущая сцена в деле
 let currentScene = null;
+
+// Данные игрока
 const playerData = {
-    name: 'Детектив',
-    stars: 50,
-    unlockedCases: ['hotel_murder'],
-    currentCase: null,
-    collectedClues: [],
-    interrogationLog: [],
-    caseProgress: {}
+    name: 'Детектив',           // Имя игрока
+    stars: 50,                   // Количество "звёзд" — внутренняя валюта/очки
+    unlockedCases: ['hotel_murder'], // Список разблокированных дел
+    currentCase: null,           // Активное дело игрока
+    collectedClues: [],          // Собранные улики
+    interrogationLog: [],        // Лог допросов
+    caseProgress: {}             // Прогресс по каждому делу (сцены, найденные улики)
 };
 
+// Инициализация после загрузки страницы
 document.addEventListener('DOMContentLoaded', async () => {
+    // Если Telegram WebApp передал данные пользователя, берём имя
     if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
         playerData.name = window.Telegram.WebApp.initDataUnsafe.user.first_name || playerData.name;
     }
     
+    // Загружаем список дел, настраиваем модальные окна и кнопку доната
     await loadCases();
     setupAboutModal();
     setupDonateButton();
 });
 
+// Загрузка списка дел из JSON
 async function loadCases() {
     try {
         const response = await fetch('cases/cases-list.json');
         const cases = await response.json();
         const casesList = document.getElementById('cases-list');
-        casesList.innerHTML = '';
+        casesList.innerHTML = ''; // Очистка контейнера перед добавлением дел
 
+        // Проходим по каждому делу и создаём его карточку
         cases.forEach(caseItem => {
             const isUnlocked = playerData.unlockedCases.includes(caseItem.id);
             const progress = playerData.caseProgress[caseItem.id]?.progress || 0;
@@ -56,6 +65,7 @@ async function loadCases() {
             casesList.appendChild(caseElement);
         });
 
+        // Навешиваем обработчики на кнопки "Играть" и "Разблокировать"
         document.querySelectorAll('.play-btn').forEach(btn => {
             btn.addEventListener('click', () => startCase(btn.dataset.case));
         });
@@ -64,17 +74,21 @@ async function loadCases() {
             btn.addEventListener('click', () => unlockCase(btn.dataset.case, parseInt(btn.dataset.price)));
         });
 
+        // Обновляем отображение звёзд
         document.getElementById('stars-count').textContent = playerData.stars;
     } catch (error) {
         console.error('Error loading cases:', error);
     }
 }
 
+// Начало или продолжение дела
 async function startCase(caseId) {
     try {
+        // Загружаем JSON с делом
         const response = await fetch(`cases/free/${caseId}.json`);
         currentCase = await response.json();
         
+        // Если игрок уже начал это дело, восстанавливаем собранные улики и лог допросов
         if (playerData.currentCase === caseId && playerData.caseProgress[caseId]) {
             playerData.collectedClues = playerData.caseProgress[caseId].clues || [];
             playerData.interrogationLog = playerData.caseProgress[caseId].log || [];
@@ -85,6 +99,7 @@ async function startCase(caseId) {
         
         playerData.currentCase = caseId;
         
+        // Показываем игровой интерфейс и скрываем меню
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('ending-screen').style.display = 'none';
@@ -97,6 +112,7 @@ async function startCase(caseId) {
     }
 }
 
+// Отображение сцены
 function showScene(sceneId) {
     const scene = currentCase.scenes[sceneId];
     if (!scene) {
@@ -107,18 +123,21 @@ function showScene(sceneId) {
     
     currentScene = sceneId;
     
+    // Отображаем текст сцены
     document.getElementById('case-title').textContent = currentCase.title;
     document.getElementById('scene-text').innerHTML = scene.text.replace(/{name}/g, playerData.name);
     
     const choicesContainer = document.getElementById('choices');
     choicesContainer.innerHTML = '';
     
+    // Отображаем кнопки выбора
     if (scene.choices && scene.choices.length > 0) {
         scene.choices.forEach(choice => {
             const button = document.createElement('button');
             button.className = 'choice-btn';
             button.textContent = choice.text;
             
+            // Блокируем выбор, если нужна определённая улика
             if (choice.requiredClue && !playerData.collectedClues.includes(choice.requiredClue)) {
                 button.disabled = true;
                 button.classList.add('disabled-choice');
@@ -126,11 +145,13 @@ function showScene(sceneId) {
             }
             
             button.addEventListener('click', () => {
+                // Добавляем улику, если она есть
                 if (choice.clue && !playerData.collectedClues.includes(choice.clue)) {
                     playerData.collectedClues.push(choice.clue);
                     updateCluesUI();
                 }
                 
+                // Переходим к следующей сцене или финалу
                 if (choice.next) {
                     const nextScene = currentCase.scenes[choice.next];
                     if (nextScene?.final) {
@@ -155,6 +176,7 @@ function showScene(sceneId) {
     updateCluesUI();
 }
 
+// Отображение экрана завершения дела
 function showEnding(sceneId) {
     const ending = currentCase.scenes[sceneId];
     if (!ending) {
@@ -163,6 +185,7 @@ function showEnding(sceneId) {
         return;
     }
     
+    // Определяем тип финала
     let endingType = "bad";
     if (sceneId.includes('true') || sceneId.includes('good')) endingType = "good";
     else if (sceneId.includes('neutral')) endingType = "neutral";
@@ -178,6 +201,7 @@ function showEnding(sceneId) {
     document.getElementById('ending-title').textContent = title;
     document.getElementById('ending-text').textContent = ending.text;
     
+    // Добавляем звёзды за результат
     playerData.stars += stars;
     document.getElementById('ending-stats').innerHTML = `
         <p>🔍 Собрано улик: ${playerData.collectedClues.length}/${currentCase.cluesToSolve}</p>
@@ -186,6 +210,7 @@ function showEnding(sceneId) {
         <p>⚖️ Итог: ${result}</p>
     `;
     
+    // Показываем экран завершения и скрываем игру
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('ending-screen').style.display = 'block';
     
@@ -193,6 +218,7 @@ function showEnding(sceneId) {
     delete playerData.caseProgress[currentCase.id];
 }
 
+// Обновление отображения количества собранных уликов
 function updateCluesUI() {
     const cluesCount = playerData.collectedClues.length;
     const totalClues = currentCase.cluesToSolve;
@@ -209,6 +235,7 @@ function updateCluesUI() {
     }
 }
 
+// Возврат в главное меню
 function returnToMenu() {
     document.getElementById('game-container').style.display = 'none';
     document.getElementById('ending-screen').style.display = 'none';
@@ -217,6 +244,7 @@ function returnToMenu() {
     loadCases();
 }
 
+// Настройка модального окна "О проекте"
 function setupAboutModal() {
     const modal = document.getElementById('about-modal');
     const btn = document.getElementById('about-btn');
@@ -240,6 +268,7 @@ function setupAboutModal() {
     });
 }
 
+// Настройка кнопки доната
 function setupDonateButton() {
     document.getElementById('donate-btn').addEventListener('click', () => {
         if (window.Telegram?.WebApp?.openInvoice) {
@@ -263,6 +292,7 @@ function setupDonateButton() {
     });
 }
 
+// Разблокировка нового дела
 async function unlockCase(caseId, price) {
     if (playerData.stars < price) {
         alert(`Недостаточно звёзд! Нужно: ${price}, у вас: ${playerData.stars}`);
@@ -287,6 +317,7 @@ async function unlockCase(caseId, price) {
     }
 }
 
+// Завершение процесса разблокировки
 function completeUnlock(caseId, price) {
     playerData.stars -= price;
     playerData.unlockedCases.push(caseId);
