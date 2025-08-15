@@ -7,36 +7,32 @@ const playerData = {
     interrogationLog: []
 };
 
+// Загружаем список кейсов и создаем карточки
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadCasesList();
-});
-
-async function loadCasesList() {
     try {
-        const response = await fetch('cases/cases-list.json');
+        const response = await fetch('cases-list.json');
         const cases = await response.json();
         const casesList = document.getElementById('cases-list');
         casesList.innerHTML = '';
 
-        cases.forEach(c => {
-            const caseItem = document.createElement('div');
-            caseItem.className = 'case-item';
-            caseItem.innerHTML = `
-                <h3>${c.title}</h3>
-                <p>${c.description}</p>
-                <button class="start-case-btn" data-case="${c.id}">🔍 Начать</button>
+        cases.forEach(caseItem => {
+            const card = document.createElement('div');
+            card.className = 'case-item';
+            card.innerHTML = `
+                <h3>${caseItem.title}</h3>
+                <p>${caseItem.description}</p>
+                <button class="start-btn" data-case="${caseItem.id}">🔍 Начать</button>
             `;
-            casesList.appendChild(caseItem);
+            casesList.appendChild(card);
         });
 
-        document.querySelectorAll('.start-case-btn').forEach(btn => {
+        document.querySelectorAll('.start-btn').forEach(btn => {
             btn.addEventListener('click', () => startCase(btn.dataset.case));
         });
-
     } catch (e) {
-        console.error('Ошибка загрузки списка дел:', e);
+        console.error('Ошибка загрузки кейсов:', e);
     }
-}
+});
 
 async function startCase(caseId) {
     try {
@@ -45,26 +41,25 @@ async function startCase(caseId) {
 
         playerData.collectedClues = [];
         playerData.interrogationLog = [];
-        playerData.currentCase = currentCase.id;
+        playerData.currentCase = caseId;
 
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('ending-screen').style.display = 'none';
 
-        showScene(currentCase.startScene);
-
+        const startScene = currentCase.startScene;
+        showScene(startScene);
     } catch (e) {
-        console.error('Ошибка загрузки дела:', e);
-        alert('Не удалось загрузить дело. Попробуйте позже.');
+        console.error('Ошибка загрузки квеста:', e);
+        alert('Не удалось загрузить квест. Попробуйте позже.');
     }
 }
 
 function showScene(sceneId) {
     const scene = currentCase.scenes[sceneId];
-    if (!scene) return console.error('Сцена не найдена:', sceneId);
+    if (!scene) return;
 
     currentScene = sceneId;
-
     document.getElementById('case-title').textContent = currentCase.title;
     document.getElementById('scene-text').innerHTML = scene.text.replace(/{name}/g, playerData.name);
 
@@ -81,7 +76,6 @@ function showScene(sceneId) {
                 if (choice.clue && !playerData.collectedClues.includes(choice.clue)) {
                     playerData.collectedClues.push(choice.clue);
                 }
-
                 if (choice.next) {
                     showScene(choice.next);
                 } else if (scene.final) {
@@ -108,7 +102,7 @@ function showEnding(finalSceneId) {
     const ending = currentCase.scenes[finalSceneId];
     if (!ending) return;
 
-    let endingType = 'bad';
+    let endingType = "bad";
     if (ending.result === 'good') endingType = 'good';
     else if (ending.result === 'neutral') endingType = 'neutral';
 
